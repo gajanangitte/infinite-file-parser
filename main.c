@@ -7,6 +7,9 @@
 #include <string.h>
 #include<time.h>
 
+// #ifndef main
+// #define find main
+// #endif
 #ifndef O_LARGEFILE
 #define O_LARGEFILE 0
 #endif
@@ -79,9 +82,9 @@ size_t min(size_t a, size_t b) {
   return a < b ? a : b;
 }
 
-long recalc_position (char *buf, int begin) {
-  int i = begin;
-  while(buf[i] != "\n" && i >= 0) {
+long long recalc_position (char *buf, long long begin) {
+  long long i = begin;
+  while(buf[i] != '\n' && i >= 0) {
     i--;
   }
   if(i > 0)
@@ -95,7 +98,7 @@ long long  sizeLeftover=0;
 int  taskFinished = 0;
 long long pos = 0;
 
-long long calc_entries(char* buf, long long size, int taskFinished, int *idx_counter) {
+long long calc_entries(char* buf, long long size) {
   char temp[strlen(buf) + 1];
   strcpy(temp, buf);
   char *token = strtok(temp, "/n");
@@ -150,7 +153,7 @@ void search(char *buf, long long size, long long *idx_counter, time_t start_time
 }
           
 
-void find(char *start_time, char *end_time, char* name, long long start_idx, long long end_idx) {
+int find(char *start_time, char *end_time, char* name, long long start_idx, long long end_idx) {
 
     f_rest = fopen("result.txt", "w");
     // log filename goes here
@@ -158,16 +161,24 @@ void find(char *start_time, char *end_time, char* name, long long start_idx, lon
     if( !handler )
     {
       printf("Error getting log file\n");
-      return 0;
+      return -1;
     }
 
     // CONVERT GIVEN TIME INPUTS INTO EPOCH TIME FORMAT
     struct tm s_tm, e_tm;
-    char* st = strptime(start_time, "%Y-%m-%d %H:%M", &s_tm);
-    char* ed = strptime(end_time, "%Y-%m-%d %H:%M", &e_tm);
+    memset(&s_tm, 0, sizeof(s_tm));
+    memset(&e_tm, 0, sizeof(e_tm));
+
+    if(sscanf(start_time, "%d-%d-%d %d:%d", &s_tm.tm_year, &s_tm.tm_mon, &s_tm.tm_mday, &s_tm.tm_hour, &s_tm.tm_min  ) ) {
+      printf("Error in Start time");
+    }
+    if(sscanf(end_time, "%d-%d-%d %d:%d", &e_tm.tm_year, &e_tm.tm_mon, &e_tm.tm_mday, &e_tm.tm_hour, &e_tm.tm_min  ) ) {
+      printf("Error in End time");
+    }
+
     time_t srt_tm = mktime(&s_tm), end_tm = mktime(&e_tm);
 
-    int idx_counter = 0;
+    long long idx_counter = 0;
     do {
 
         bytesread = fread(buf+sizeLeftover, 1, sizeof(buf)-1-sizeLeftover, handler);
@@ -180,7 +191,7 @@ void find(char *start_time, char *end_time, char* name, long long start_idx, lon
         }
 
         buf[bytesread+sizeLeftover] = 0; 
-        long long num_entries = calc_entries( buf, bytesread+sizeLeftover, &taskFinished, idx_counter);
+        long long num_entries = calc_entries( buf, bytesread+sizeLeftover);
         
         pos = recalc_position( buf, bytesread+sizeLeftover);
         if(pos < 1) {
@@ -215,5 +226,12 @@ void find(char *start_time, char *end_time, char* name, long long start_idx, lon
     while(taskFinished == 0);
 
     fclose(handler);
-
+    return 0;
 }
+
+void main(int argc, char **argv) {
+    
+    //use FIND func
+    return;
+}
+ 
